@@ -23,16 +23,23 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def add_menu(self):
         ######Составляем меню
-        Menu_el_list = [["File","Open", "Save", "Save as", "Export", "Exit"],["Edit","Copy","Paste"],["Help", "Documentation", "Check an update", "About"]]
+        Menu_el_list = [["File","Open", "Save", "Save as", "Export", "Exit"],
+                        ["Edit","Copy","Paste"],
+                        ["Help", "Documentation", "Check an update", "About"]]
         print(len(Menu_el_list))
         for i in range(len(Menu_el_list)):
             print(Menu_el_list[i][0],end=': \n')
-            exec('self.%s = QtWidgets.QMenu("%s")' % (("menu" + Menu_el_list[i][0].replace(" ","_")),Menu_el_list[i][0].replace(" ","_")))
+            exec('self.%s = QtWidgets.QMenu("%s")' % (("menu" +
+                                                       Menu_el_list[i][0].replace(" ","_")),Menu_el_list[i][0].replace(" ","_")))
             for j in range(len(Menu_el_list[i])-1):
                 print("  "+ Menu_el_list[i][j+1])
-                exec('self.%s = QtWidgets.QAction("%s", None)' % (("act" + Menu_el_list[i][j+1].replace(" ","_")),Menu_el_list[i][j+1].replace(" ","_")))
-                exec('self.%s.addAction(self.%s)' % (("menu" + Menu_el_list[i][0].replace(" ","_")),("act" + Menu_el_list[i][j+1].replace(" ","_"))))
-            exec('self.menuBar().addMenu(self.%s)' % ("menu" + Menu_el_list[i][0].replace(" ","_")))
+                exec('self.%s = QtWidgets.QAction("%s", None)' %
+                     (("act" + Menu_el_list[i][j+1].replace(" ","_")),
+                      Menu_el_list[i][j+1].replace(" ","_")))
+                exec('self.%s.addAction(self.%s)' % (("menu" + Menu_el_list[i][0].replace(" ","_")),
+                                                     ("act" + Menu_el_list[i][j+1].replace(" ","_"))))
+            exec('self.menuBar().addMenu(self.%s)' %
+                 ("menu" + Menu_el_list[i][0].replace(" ","_")))
 
     def on_open(self):
         print("Выбран пункт меню Open")
