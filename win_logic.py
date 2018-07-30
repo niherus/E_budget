@@ -1,7 +1,7 @@
 from PyQt5 import QtCore,QtWidgets,QtGui
 from datetime import date
 import time
-import sys
+#import sys
 
 
 class MyWindow(QtWidgets.QMainWindow):
@@ -62,44 +62,61 @@ class MyWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         ########создаем вкладки
         self.tabs = QtWidgets.QTabWidget()
-        self.tab1 = QtWidgets.QWidget()
-        self.tab2 = QtWidgets.QWidget()
-        self.tab3 = QtWidgets.QWidget()
-        self.tabs.resize(487,280)
-        self.tabs.addTab(self.tab1,"Расходы")
-        self.tabs.addTab(self.tab2,"Доходы")
-        self.tabs.addTab(self.tab3,"Анализ финансов")
-
-        self.tab1.layout = QtWidgets.QVBoxLayout(self)
-        self.table = QtWidgets.QTableView()
-        self.model = QtGui.QStandardItemModel(1, 6)
+        self.tabs.resize(487, 280)
+        #Вкладка расходы
+        self.spents_tab = QtWidgets.QWidget()
+        self.tabs.addTab(self.spents_tab, "Расходы")
+        self.spents_tab.layout = QtWidgets.QVBoxLayout(self)
+        self.spents_table = QtWidgets.QTableView()
+        self.spents_model = QtGui.QStandardItemModel(1, 6)
         self.num = []
-        for row in range(0, 24):
-           self.num.append(str(24-row))
-           for column in range(0, 6):
-            self.item = QtGui.QStandardItem("({0}, {1})".format(row, column))
-            self.item.setEditable(False)
-            self.item.setCheckable(True)
-            self.model.setItem(row, column, self.item)
-        self.model.setHorizontalHeaderLabels(["Сумма","Валюта","Тип операции","Дата","Категория трат","Примечание"])
-        self.model.setVerticalHeaderLabels(self.num)
-        self.table.setModel(self.model)
-        self.hHeader = self.table.horizontalHeader()
+        self.spents_model.setHorizontalHeaderLabels(
+            ["Сумма", "Валюта", "Тип операции", "Дата", "Категория трат", "Примечание"])
+        self.spents_table.setModel(self.spents_model)
+        self.hHeader = self.spents_table.horizontalHeader()
         self.hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-        self.btnAddRaw = QtWidgets.QPushButton('&Добавить расходы')
-        self.btnAddRaw.clicked.connect(self.click_event)
-        self.tab1.layout.addWidget(self.table)
-        self.tab1.layout.addWidget(self.btnAddRaw, alignment=QtCore.Qt.AlignLeft)
-        self.tab1.setLayout(self.tab1.layout)
+        self.btnAddRawSpent = QtWidgets.QPushButton('&Внести расходы')
+        self.btnAddRawSpent.clicked.connect(self.click_event_spent)
+        self.spents_tab.layout.addWidget(self.spents_table)
+        self.spents_tab.layout.addWidget(self.btnAddRawSpent, alignment=QtCore.Qt.AlignLeft)
+        self.spents_tab.setLayout(self.spents_tab.layout)
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
+
+        #Вкладка доходы
+        self.income_tab = QtWidgets.QWidget()
+        self.tabs.addTab(self.income_tab, "Доходы")
+        self.income_tab.layout = QtWidgets.QVBoxLayout(self)
+        self.income_table = QtWidgets.QTableView()
+        self.income_model = QtGui.QStandardItemModel(1, 6)
+        self.num = []
+        self.income_model.setHorizontalHeaderLabels(
+            ["Сумма", "Валюта", "Тип операции", "Дата", "Источник", "Примечание"])
+        self.income_table.setModel(self.income_model)
+        self.hHeader = self.income_table.horizontalHeader()
+        self.hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        self.btnAddRawIncome = QtWidgets.QPushButton('&Внести доходы')
+        self.btnAddRawIncome.clicked.connect(self.click_event_income)
+        self.income_tab.layout.addWidget(self.income_table)
+        self.income_tab.layout.addWidget(self.btnAddRawIncome, alignment=QtCore.Qt.AlignLeft)
+        self.income_tab.setLayout(self.income_tab.layout)
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
+
+
+        #Вкладка анализ (рекомедуемые ежедненые расходы на основные категории,
+        #остаток до целей накопления, круговык диграммы расходов/доходов, динамика
+        #расходов/доходов в заданный период)
+        self.tab3 = QtWidgets.QWidget()
+        self.tabs.addTab(self.tab3, "Анализ финансов")
+
 
 
 
 
     ######Эвенты кнопок
-    def click_event(self):
-        dialog = Add_spent(self.tab1)
+    def click_event_spent(self):
+        dialog = Add_spent(self.spents_tab)
         dialog.accepted.connect(self.on_accepted)
         dialog.rejected.connect(self.on_rejected)
         dialog.finished[int].connect(self.on_finished)
@@ -115,11 +132,37 @@ class MyWidget(QtWidgets.QWidget):
             L = []
             for i in range(0, 6):
                 L.append(QtGui.QStandardItem("{0}".format(self.new_raw[i],checkable = True)))
-            self.model.insertRow(0, L)
-            self.table.setModel(self.model)
+            self.spents_model.insertRow(0, L)
+            self.spents_table.setModel(self.spents_model)
         else:
             print("Нажата кнопка Cancel, кнопка Закрыть или клавиша <Esc>",
                   result)
+
+    def click_event_income(self):
+        dialog = Add_income(self.income_tab)
+        dialog.accepted.connect(self.on_accepted)
+        dialog.rejected.connect(self.on_rejected)
+        dialog.finished[int].connect(self.on_finished)
+        result = dialog.exec_()
+        self.new_raw = []
+        if result == QtWidgets.QDialog.Accepted:
+            self.new_raw.append(dialog.money.text())
+            self.new_raw.append(dialog.valuta.currentText())
+            self.new_raw.append(dialog.op_type.currentText())
+            self.new_raw.append(str(date.today()) + " " + time.strftime("%H:%M"))
+            self.new_raw.append(dialog.spent_type.currentText())
+            self.new_raw.append(dialog.Big_text.toPlainText())
+            L = []
+            for i in range(0, 6):
+                L.append(QtGui.QStandardItem("{0}".format(self.new_raw[i],checkable = True)))
+            self.income_model.insertRow(0, L)
+            self.income_table.setModel(self.income_model)
+        else:
+            print("Нажата кнопка Cancel, кнопка Закрыть или клавиша <Esc>",
+                  result)
+
+
+
     def on_accepted(self):
         print("on_accepted")
 
@@ -134,7 +177,7 @@ class MyWidget(QtWidgets.QWidget):
 class Add_spent(QtWidgets.QDialog):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
-        self.setWindowTitle("Диалоговое окно")
+        self.setWindowTitle("Добавьте расходы")
         self.resize(200, 70)
         self.mainBox = QtWidgets.QVBoxLayout()
         self.one_level = QtWidgets.QHBoxLayout()
@@ -156,6 +199,54 @@ class Add_spent(QtWidgets.QDialog):
         self.one_level.addWidget(self.valuta)
         self.one_level.addWidget(self.op_type)
         self.one_level.addWidget(self.spent_type)
+
+        self.label = QtWidgets.QLabel(self)
+        self.label.setText("Примечание:")
+        self.Big_text = QtWidgets.QTextEdit()
+        self.four_level = QtWidgets.QHBoxLayout()
+        self.btnOK = QtWidgets.QPushButton("&OK")
+        self.btnCancel = QtWidgets.QPushButton("&Cancel")
+        self.btnCancel.setDefault(True)
+        self.btnOK.clicked.connect(self.accept)
+        self.btnCancel.clicked.connect(self.reject)
+        self.four_level.addWidget(self.btnOK)
+        self.four_level.addWidget(self.btnCancel)
+        self.two_level = QtWidgets.QHBoxLayout()
+        self.two_level.addWidget(self.label)
+        self.three_level = QtWidgets.QHBoxLayout()
+        self.three_level.addWidget(self.Big_text)
+        self.mainBox.addLayout(self.one_level)
+        self.mainBox.addLayout(self.two_level)
+        self.mainBox.addLayout(self.three_level)
+        self.mainBox.addLayout(self.four_level)
+
+        self.setLayout(self.mainBox)
+
+class Add_income(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        QtWidgets.QDialog.__init__(self, parent)
+        self.setWindowTitle("Диалоговое окно")
+        self.resize(200, 70)
+        self.mainBox = QtWidgets.QVBoxLayout()
+        self.one_level = QtWidgets.QHBoxLayout()
+        self.money = QtWidgets.QDoubleSpinBox()
+        self.money.setButtonSymbols(2)
+        self.money.setMaximum(10**10)
+        self.money.setDecimals(2)
+        self.money.setFixedWidth(50)
+        self.valuta = QtWidgets.QComboBox(self)
+        self.valuta.addItems(["Рубль","Доллар","Евро"])
+        self.valuta.setFixedWidth(65)
+        self._type = QtWidgets.QComboBox(self)
+        self.op_type.setFixedWidth(80)
+        self.op_type.addItems(["Наличные", "Карта"])
+        self.income_type = QtWidgets.QComboBox(self)
+        self.income_type.addItems(["Зарплата", "Продажа", "Возврат долгов", "Накопительный счет", "Вклады"])
+        self.income_type.setFixedWidth(80)
+        self.one_level.addWidget(self.money)
+        self.one_level.addWidget(self.valuta)
+        self.one_level.addWidget(self.op_type)
+        self.one_level.addWidget(self.income_type)
 
         self.label = QtWidgets.QLabel(self)
         self.label.setText("Примечание:")
