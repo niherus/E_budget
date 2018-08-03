@@ -44,31 +44,54 @@ class Db_control():
             self.cur.executescript(sql)
         except sqlite3.DatabaseError as err:
             print(err)
+    def get_tables_list(self):
+        sql = """SELECT name FROM sqlite_master
+        WHERE TYPE IN ('table','view') AND name not like 'sqlite_%'
+        UNION ALL
+        SELECT name FROM sqlite_temp_master
+        WHERE type IN ('table','view')
+        ORDER BY 1;
+        """
+        try:
+            self.cur.executescript(sql)
+        except sqlite3.DatabaseError as err:
+            print(err)
+        return self.cur.fetchall()
     def get_raw_number(self, table_name):
-        sql = """
-        SELECT COUNT(*) FROM %s
-        """ % table_name
+        sql = "SELECT COUNT(*) FROM %s" % table_name
         try:
-            self.cur.executescript(sql)
+            self.cur.execute(sql)
         except sqlite3.DatabaseError as err:
             print(err)
-        return self.cur.fetchall()
+        return len(self.cur.fetchall())
     def get_column_number(self, table_name):
-        sql = """
-        PRAGMA TABLE_INFO(%s)
-        """ % table_name
+        sql = "PRAGMA TABLE_INFO(%s)" % table_name
         try:
-            self.cur.executescript(sql)
+            self.cur.execute(sql)
         except sqlite3.DatabaseError as err:
             print(err)
-        return self.cur.fetchall()
+        return len(self.cur.fetchall())
     def get_colomn_names(self, table_name):
-        print("заглушка")
+        sql = "PRAGMA TABLE_INFO(%s)" % table_name
+        try:
+            self.cur.execute(sql)
+        except sqlite3.DatabaseError as err:
+            print(err)
+        names = [tup[1] for tup in self.cur.fetchall()]
+        return names
     def get_colomn_name(self, table_name, col_num = 0):
-        print("заглушка")
-    def add_raw(self, raw_data):
-        print("заглушка")
-
+        sql = "PRAGMA TABLE_INFO(%s)" % table_name
+        try:
+            self.cur.execute(sql)
+        except sqlite3.DatabaseError as err:
+            print(err)
+        names = [tup[1] for tup in self.cur.fetchall()]
+        return names[col_num]
+    def add_raw(self, table_name, raw_data):
+        if self.get_column_number(table_name) == len(raw_data):
+            sql = "INSERT INTO"
+        else:
+            print("Warning! Mismatch of raw length and fields number!")
     def __del__(self):
         try:
             self.cur.close()
@@ -82,9 +105,10 @@ class Db_control():
 
 
 
-
-base1 = Db_control("fin_base.db",default = True)
-base1.create_table("user", ['Name', 'pass','email'],['TEXT',"INTEGER","TEXT"])
-print(base1.get_raw_number("user"))
-print(base1.get_column_number("user"))
-del base1
+if __name__ == '__main__':
+    base1 = Db_control("fin_base.db",default = True)
+    base1.create_table("user", ['Name', 'pass','email'],['TEXT',"INTEGER","TEXT"])
+    print(base1.get_colomn_name("user"))
+    print(base1.get_raw_number("user"))
+    print(base1.get_column_number("user"))
+    del base1

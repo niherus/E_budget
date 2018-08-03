@@ -126,7 +126,7 @@ class MyWidget(QtWidgets.QWidget):
             self.new_raw.append(dialog.money.text())
             self.new_raw.append(dialog.valuta.currentText())
             self.new_raw.append(dialog.op_type.currentText())
-            self.new_raw.append(str(date.today()) + " " + time.strftime("%H:%M"))
+            self.new_raw.append(str(date.today()))
             self.new_raw.append(dialog.spent_type.currentText())
             self.new_raw.append(dialog.Big_text.toPlainText())
             L = []
@@ -149,8 +149,8 @@ class MyWidget(QtWidgets.QWidget):
             self.new_raw.append(dialog.money.text())
             self.new_raw.append(dialog.valuta.currentText())
             self.new_raw.append(dialog.op_type.currentText())
-            self.new_raw.append(str(date.today()) + " " + time.strftime("%H:%M"))
-            self.new_raw.append(dialog.spent_type.currentText())
+            self.new_raw.append(str(date.today()))
+            self.new_raw.append(dialog.income_type.currentText())
             self.new_raw.append(dialog.Big_text.toPlainText())
             L = []
             for i in range(0, 6):
@@ -199,7 +199,6 @@ class Add_spent(QtWidgets.QDialog):
         self.one_level.addWidget(self.valuta)
         self.one_level.addWidget(self.op_type)
         self.one_level.addWidget(self.spent_type)
-
         self.label = QtWidgets.QLabel(self)
         self.label.setText("Примечание:")
         self.Big_text = QtWidgets.QTextEdit()
@@ -237,7 +236,7 @@ class Add_income(QtWidgets.QDialog):
         self.valuta = QtWidgets.QComboBox(self)
         self.valuta.addItems(["Рубль","Доллар","Евро"])
         self.valuta.setFixedWidth(65)
-        self._type = QtWidgets.QComboBox(self)
+        self.op_type = QtWidgets.QComboBox(self)
         self.op_type.setFixedWidth(80)
         self.op_type.addItems(["Наличные", "Карта"])
         self.income_type = QtWidgets.QComboBox(self)
@@ -247,7 +246,6 @@ class Add_income(QtWidgets.QDialog):
         self.one_level.addWidget(self.valuta)
         self.one_level.addWidget(self.op_type)
         self.one_level.addWidget(self.income_type)
-
         self.label = QtWidgets.QLabel(self)
         self.label.setText("Примечание:")
         self.Big_text = QtWidgets.QTextEdit()
