@@ -44,8 +44,15 @@ class Db_control():
             self.cur.executescript(sql)
         except sqlite3.DatabaseError as err:
             print(err)
+    def remove_table(self, table_name = 'new_table'):
+        sql = "DROP TABLE %s" % table_name
+        try:
+            self.cur.executescript(sql)
+        except sqlite3.DatabaseError as err:
+            print(err)
     def get_tables_list(self):
-        sql = """SELECT name FROM sqlite_master
+        sql = """\
+        SELECT name FROM sqlite_master
         WHERE TYPE IN ('table','view') AND name not like 'sqlite_%'
         UNION ALL
         SELECT name FROM sqlite_temp_master
@@ -53,17 +60,17 @@ class Db_control():
         ORDER BY 1;
         """
         try:
-            self.cur.executescript(sql)
+            self.cur.execute(sql)
         except sqlite3.DatabaseError as err:
             print(err)
-        return self.cur.fetchall()
+        return (self.cur.fetchall())
     def get_raw_number(self, table_name):
         sql = "SELECT COUNT(*) FROM %s" % table_name
         try:
             self.cur.execute(sql)
         except sqlite3.DatabaseError as err:
             print(err)
-        return len(self.cur.fetchall())
+        return self.cur.fetchall()[0][0]
     def get_column_number(self, table_name):
         sql = "PRAGMA TABLE_INFO(%s)" % table_name
         try:
@@ -88,10 +95,20 @@ class Db_control():
         names = [tup[1] for tup in self.cur.fetchall()]
         return names[col_num]
     def add_raw(self, table_name, raw_data):
-        if self.get_column_number(table_name) == len(raw_data):
-            sql = "INSERT INTO"
+        if self.get_column_number(table_name)-1 == len(raw_data):
+            sql = """
+            INSERT INTO %s (%s)
+            VALUES (%s);
+            """ % (table_name,str(self.get_colomn_names(table_name)[1:len(self.get_colomn_names(table_name))]).
+                   strip('[]').replace('\'',''),str(raw_data).strip('[]'))
+            try:
+                self.cur.execute(sql)
+            except sqlite3.DatabaseError as err:
+                print(err)
         else:
             print("Warning! Mismatch of raw length and fields number!")
+    def commite_changes(self):
+        self.base.commit()
     def __del__(self):
         try:
             self.cur.close()
@@ -108,7 +125,17 @@ class Db_control():
 if __name__ == '__main__':
     base1 = Db_control("fin_base.db",default = True)
     base1.create_table("user", ['Name', 'pass','email'],['TEXT',"INTEGER","TEXT"])
+    base1.create_table("user2", ['Name', 'pass', 'email'], ['TEXT', "INTEGER", "TEXT"])
+    base1.add_raw("user",['Max','2311k','tnb6@yandex.ru'])
+    base1.add_raw("user", ['Max', '231', 'tnb6@yandex.ru'])
+    base1.add_raw("user", ['Max2', '2313', 'tnb6@yandex.ru3'])
+    print(base1.get_tables_list())
+    print((base1.get_tables_list()))
     print(base1.get_colomn_name("user"))
+    print(base1.get_colomn_names("user"))
     print(base1.get_raw_number("user"))
     print(base1.get_column_number("user"))
+    base1.commite_changes()
+    #base1.remove_table((base1.get_tables_list())[0][0])
+    #print(base1.get_tables_list())
     del base1
