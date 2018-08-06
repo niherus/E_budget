@@ -1,8 +1,6 @@
 from PyQt5 import QtCore,QtWidgets,QtGui
 from datetime import date
-import time
-#import sys
-
+from database_logic import Db_control
 
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -20,7 +18,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.tablet_widget)
         self.add_menu()
         self.show()
-
     def add_menu(self):
         ######Составляем меню
         Menu_el_list = [["File","Open", "Save", "Save as", "Export", "Exit"],
@@ -59,6 +56,8 @@ class MyWidget(QtWidgets.QWidget):
     ######Расстановка элементов при запуске
     def __init__(self, parent):
         super(QtWidgets.QWidget, self).__init__(parent) ######Создаем главное окно
+        #######Подключаем базу данных
+        self.fin_base = Db_control("finanse_base.db", default=True)
         self.layout = QtWidgets.QVBoxLayout(self)
         ########создаем вкладки
         self.tabs = QtWidgets.QTabWidget()
@@ -70,8 +69,16 @@ class MyWidget(QtWidgets.QWidget):
         self.spents_table = QtWidgets.QTableView()
         self.spents_model = QtGui.QStandardItemModel(1, 6)
         self.num = []
-        self.spents_model.setHorizontalHeaderLabels(
-            ["Сумма", "Валюта", "Тип операции", "Дата", "Категория трат", "Примечание"])
+        column_names = ["Сумма", "Валюта", "Счет", "Дата", "Категория трат", "Примечание"]
+        self.fin_base.create_table("Spent",column_names,['TEXT'] * len(column_names))
+        self.fin_base.commite_changes()
+        spent_data = self.fin_base.get_data("Spent")
+        for raw in spent_data:
+            L = []
+            for i in range(1,len(raw)):
+                L.append(QtGui.QStandardItem("{0}".format(raw[i], checkable=True)))
+            self.spents_model.insertRow(0,L)
+        self.spents_model.setHorizontalHeaderLabels(column_names)
         self.spents_table.setModel(self.spents_model)
         self.hHeader = self.spents_table.horizontalHeader()
         self.hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
@@ -90,8 +97,16 @@ class MyWidget(QtWidgets.QWidget):
         self.income_table = QtWidgets.QTableView()
         self.income_model = QtGui.QStandardItemModel(1, 6)
         self.num = []
-        self.income_model.setHorizontalHeaderLabels(
-            ["Сумма", "Валюта", "Тип операции", "Дата", "Источник", "Примечание"])
+        column_names = ["Сумма", "Валюта", "Счет", "Дата", "Источник", "Примечание"]
+        self.fin_base.create_table("Income", column_names, ['TEXT'] * len(column_names))
+        self.fin_base.commite_changes()
+        income_data = self.fin_base.get_data("Income")
+        for raw in income_data:
+            L = []
+            for i in range(1, len(raw)):
+                L.append(QtGui.QStandardItem("{0}".format(raw[i], checkable=True)))
+            self.income_model.insertRow(0, L)
+        self.income_model.setHorizontalHeaderLabels(column_names)
         self.income_table.setModel(self.income_model)
         self.hHeader = self.income_table.horizontalHeader()
         self.hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
@@ -103,15 +118,11 @@ class MyWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
-
         #Вкладка анализ (рекомедуемые ежедненые расходы на основные категории,
         #остаток до целей накопления, круговык диграммы расходов/доходов, динамика
         #расходов/доходов в заданный период)
         self.tab3 = QtWidgets.QWidget()
         self.tabs.addTab(self.tab3, "Анализ финансов")
-
-
-
 
 
     ######Эвенты кнопок
@@ -129,8 +140,10 @@ class MyWidget(QtWidgets.QWidget):
             self.new_raw.append(str(date.today()))
             self.new_raw.append(dialog.spent_type.currentText())
             self.new_raw.append(dialog.Big_text.toPlainText())
+            self.fin_base.add_raw("Spent",self.new_raw)
+            self.fin_base.commite_changes()
             L = []
-            for i in range(0, 6):
+            for i in range(0, len(self.new_raw)):
                 L.append(QtGui.QStandardItem("{0}".format(self.new_raw[i],checkable = True)))
             self.spents_model.insertRow(0, L)
             self.spents_table.setModel(self.spents_model)
@@ -152,8 +165,10 @@ class MyWidget(QtWidgets.QWidget):
             self.new_raw.append(str(date.today()))
             self.new_raw.append(dialog.income_type.currentText())
             self.new_raw.append(dialog.Big_text.toPlainText())
+            self.fin_base.add_raw("Income", self.new_raw)
+            self.fin_base.commite_changes()
             L = []
-            for i in range(0, 6):
+            for i in range(0, len(self.new_raw)):
                 L.append(QtGui.QStandardItem("{0}".format(self.new_raw[i],checkable = True)))
             self.income_model.insertRow(0, L)
             self.income_table.setModel(self.income_model)

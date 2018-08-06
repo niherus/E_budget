@@ -1,21 +1,35 @@
-import sqlite3
+from PyQt5 import QtWidgets, QtGui
 
-sqlite_file = 'fin_base.db'
-table_name = 'user'
+class MyWidget(QtWidgets.QWidget):
 
-# Connecting to the database file
-conn = sqlite3.connect(sqlite_file)
-c = conn.cursor()
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
 
-# Retrieve column information
-# Every column will be represented by a tuple with the following attributes:
-# (id, name, type, notnull, default_value, primary_key)
-c.execute('PRAGMA TABLE_INFO({})'.format(table_name))
+        self.tableModel = QtGui.QStandardItemModel(self)
+        self.tableModel.itemChanged.connect(self.itemChanged)
 
-# collect names in a list
-names = [tup[1] for tup in c.fetchall()]
-print(names)
-# e.g., ['id', 'date', 'time', 'date_time']
+        item = QtGui.QStandardItem("Click me")
+        item.setCheckable(True)
+        self.tableModel.appendRow(item)
 
-# Closing the connection to the database file
-conn.close()
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.mainLayout)
+
+        self.tableView = QtWidgets.QTableView()
+        self.tableView.setModel(self.tableModel)
+        self.mainLayout.addWidget(self.tableView)
+
+    def itemChanged(self, item):
+        print("Item {!r} checkState: {}".format(item.text(), item.checkState()))
+
+
+def main():
+    app = QtWidgets.QApplication([])
+
+    win = MyWidget()
+    win.show()
+    win.raise_()
+    app.exec_()
+
+if __name__ == "__main__":
+    main()
