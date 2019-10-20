@@ -71,7 +71,7 @@ creat("hope")
 flag = (input("Add new user? ") == 'Y')
 while flag:
     add_user("hope",input("Username: "),input("Password: "))
-    flag = (input("Add new user? ") == 'Y')
+    flag = (input("Add new user? (Y/N) ") == 'Y')
 check_info("hope")
 
 
